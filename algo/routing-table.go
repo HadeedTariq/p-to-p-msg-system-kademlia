@@ -84,14 +84,18 @@ func GetMSBIndex(distance *big.Int) int {
 	if distance.Sign() == 0 {
 		return -1
 	}
+
 	return distance.BitLen() - 1
 }
 
 func (rt *RoutingTable) Add(contact Contacts) {
 	distance := rt.selfId.XOR(contact.Id)
+
 	index := GetMSBIndex(distance)
 	if index >= 0 {
 		rt.buckets[index].Add(contact)
+	} else {
+		fmt.Println("Same peer can't connect with each other")
 	}
 }
 
@@ -110,32 +114,4 @@ func NewRoutingTable(selfID NodeID) *RoutingTable {
 	}
 
 	return &RoutingTable{buckets: buckets, selfId: selfID}
-}
-
-// ~ let say this is for storing messages in memory
-type Messages struct {
-	SenderId       NodeID
-	ReceiverId     NodeID
-	MessageContent string
-	MessageId      string
-}
-type MessagingPeer struct {
-	ID           NodeID
-	Messages     []Messages
-	Port         int
-	Address      string
-	RoutingTable *RoutingTable
-}
-
-// ~ so now as the structure is build now my main focus is towards creating the node-id and functionalities around routing table
-func NewMessagingPeer(port int, address string) *MessagingPeer {
-	add := fmt.Sprintf("%s:%d", address, port)
-	selfID := NewNodeId([]byte(add))
-	return &MessagingPeer{
-		ID:           selfID,
-		Messages:     make([]Messages, 0),
-		Port:         port,
-		Address:      address,
-		RoutingTable: NewRoutingTable(selfID),
-	}
 }
