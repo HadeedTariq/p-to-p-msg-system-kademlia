@@ -76,7 +76,7 @@ func NewMessagingPeer(port int, address string) *MessagingPeer {
 		ID:           selfID,
 		Messages:     make([]Messages, 0),
 		Port:         port,
-		Address:      address,
+		Address:      add,
 		RoutingTable: NewRoutingTable(selfID),
 	}
 }

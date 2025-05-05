@@ -30,6 +30,14 @@ func main() {
 		Id:      peerA.ID,
 		Address: peerA.Address,
 	})
+	peerB.RoutingTable.Add(algo.Contacts{
+		Id:      peerC.ID,
+		Address: peerC.Address,
+	})
+	peerB.RoutingTable.Add(algo.Contacts{
+		Id:      peerD.ID,
+		Address: peerD.Address,
+	})
 
 	peerB.SendMessage("Hello from B to A", peerA.ID)
 

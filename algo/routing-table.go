@@ -72,6 +72,7 @@ func (kb *KBucket) Evict() bool {
 		kb.contacts = append(kb.contacts[:0], kb.contacts[0+1:]...)
 		return true
 	}
+
 	return false
 }
 
@@ -93,7 +94,12 @@ func (rt *RoutingTable) Add(contact Contacts) {
 
 	index := GetMSBIndex(distance)
 	if index >= 0 {
-		rt.buckets[index].Add(contact)
+		isAdded := rt.buckets[index].Add(contact)
+		if isAdded {
+			fmt.Printf("The contact is added to bucket: %d \n", index)
+		} else {
+			fmt.Println("Not added")
+		}
 	} else {
 		fmt.Println("Same peer can't connect with each other")
 	}
