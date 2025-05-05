@@ -64,8 +64,19 @@ func (mp *MessagingPeer) handleConnection(conn net.Conn) {
 	mp.Messages = append(mp.Messages, msg)
 }
 
-func (mp *MessagingPeer) SendMessage(content string, peerId NodeID) {
-	// ~ so may be first I have to check that the peer exist or not
+func (mp *MessagingPeer) SendMessage(content string, peerId NodeID) (string, error) {
+
+	if mp.ID == peerId {
+		err := fmt.Errorf("Same peer can't send message to each other")
+		return "", err
+	}
+
+	distance := mp.ID.XOR(peerId)
+	index := GetMSBIndex(distance)
+	isExist := mp.RoutingTable.buckets[index].Find(peerId)
+	if isExist {
+		return "msg send", nil // simulate
+	}
 
 }
 
