@@ -1,45 +1,23 @@
 package main
 
-import (
-	"time"
-
-	"github.com/HadeedTariq/p-to-p-msg-system-kademlia/algo"
-)
+import "github.com/HadeedTariq/p-to-p-msg-system-kademlia/algo"
 
 func main() {
-	// ~ so how the messaging system looks like the peers connect
+	peerA := algo.NewMessagingPeer(8001, "127.0.0.1")
+	peerB := algo.NewMessagingPeer(8002, "127.0.0.1")
+	peerC := algo.NewMessagingPeer(8003, "127.0.0.1")
 
-	// ~ so how does the peer connects
-	peerA := algo.NewMessagingPeer(8000, "localhost")
-	go peerA.StartServer()
+	// manually add each other to routing tables for bootstrapping
+	peerA.RoutingTable.Add(algo.Contacts{Id: peerB.ID, Address: peerB.Address})
+	peerB.RoutingTable.Add(algo.Contacts{Id: peerC.ID, Address: peerC.Address})
 
-	// Peer B
-	peerB := algo.NewMessagingPeer(8001, "localhost")
-	go peerB.StartServer()
+	network := map[string]*algo.MessagingPeer{
+		peerA.ID.String(): peerA,
+		peerB.ID.String(): peerB,
+		peerC.ID.String(): peerC,
+	}
 
-	// Peer C
-	peerC := algo.NewMessagingPeer(8002, "localhost")
-	go peerC.StartServer()
-
-	// Peer D
-	peerD := algo.NewMessagingPeer(8003, "localhost")
-	go peerD.StartServer()
-	time.Sleep(1 * time.Second)
-
-	peerB.RoutingTable.Add(algo.Contacts{
-		Id:      peerA.ID,
-		Address: peerA.Address,
-	})
-	peerB.RoutingTable.Add(algo.Contacts{
-		Id:      peerC.ID,
-		Address: peerC.Address,
-	})
-	peerB.RoutingTable.Add(algo.Contacts{
-		Id:      peerD.ID,
-		Address: peerD.Address,
-	})
-
-	peerB.SendMessage("Hello from B to A", peerA.ID)
+	results := peerA.IterativeFindNode(peerC.ID, network)
 
 	select {}
 }

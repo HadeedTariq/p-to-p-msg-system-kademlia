@@ -114,6 +114,27 @@ func (rt *RoutingTable) Add(contact Contacts) {
 	}
 }
 
+func (rt *RoutingTable) FindClosestContacts(targetId NodeID, count int) []Contacts {
+	allContacts := []Contacts{}
+
+	for _, bucket := range rt.buckets {
+		allContacts = append(allContacts, bucket.contacts...)
+	}
+
+	// so now I have to sort them because my main concern is to return the closest nodes
+	sort.Slice(allContacts, func(i, j int) bool {
+		d1 := targetId.XOR(allContacts[i].Id)
+		d2 := targetId.XOR(allContacts[j].Id)
+		return d1.Cmp(d2) == -1
+	})
+
+	if len(allContacts) < count {
+		return allContacts
+	}
+
+	return allContacts[:count]
+}
+
 func NewNodeId(data []byte) NodeID {
 	hash := sha1.Sum(data[:])
 	var newId NodeID
