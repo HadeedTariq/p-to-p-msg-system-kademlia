@@ -49,8 +49,6 @@ func (mp *MessagingPeer) handleConnection(conn net.Conn) {
 		log.Println("Read error:", err)
 		return
 	}
-
-	// Deserialize the message (can use JSON, gob, etc.)
 	var msg Messages
 	err = json.Unmarshal(buf[:n], &msg)
 	if err != nil {
@@ -60,24 +58,45 @@ func (mp *MessagingPeer) handleConnection(conn net.Conn) {
 
 	fmt.Printf("Received message from %s: %s\n", msg.SenderId.String(), msg.MessageContent)
 
-	// Save the message
 	mp.Messages = append(mp.Messages, msg)
 }
-
 func (mp *MessagingPeer) SendMessage(content string, peerId NodeID) (string, error) {
-
 	if mp.ID == peerId {
-		err := fmt.Errorf("Same peer can't send message to each other")
-		return "", err
+		return "", fmt.Errorf("same peer can't send message to itself")
 	}
 
 	distance := mp.ID.XOR(peerId)
 	index := GetMSBIndex(distance)
-	isExist := mp.RoutingTable.buckets[index].Find(peerId)
-	if isExist {
-		return "msg send", nil // simulate
+	peerAddress := mp.RoutingTable.buckets[index].Find(peerId)
+
+	if peerAddress == "" {
+		return "", fmt.Errorf("peer not found in routing table")
 	}
 
+	conn, err := net.Dial("tcp", peerAddress)
+	if err != nil {
+		return "", fmt.Errorf("failed to connect to peer: %w", err)
+	}
+	defer conn.Close()
+
+	msg := &Messages{
+		SenderId:       mp.ID,
+		ReceiverId:     peerId,
+		MessageContent: content,
+		MessageId:      "Random",
+	}
+
+	msgBytes, err := json.Marshal(msg)
+	if err != nil {
+		return "", fmt.Errorf("failed to serialize message: %w", err)
+	}
+
+	_, err = conn.Write(msgBytes)
+	if err != nil {
+		return "", fmt.Errorf("failed to send message: %w", err)
+	}
+
+	return "message sent successfully", nil
 }
 
 func NewMessagingPeer(port int, address string) *MessagingPeer {

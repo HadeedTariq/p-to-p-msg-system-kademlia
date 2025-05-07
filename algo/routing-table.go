@@ -41,13 +41,13 @@ type KBucket struct {
 	contacts []Contacts
 }
 
-func (kb *KBucket) Find(id NodeID) bool {
+func (kb *KBucket) Find(id NodeID) string {
 	for _, c := range kb.contacts {
 		if c.Id == id {
-			return true
+			return c.Address
 		}
 	}
-	return false
+	return ""
 }
 
 func (kb *KBucket) Add(contact Contacts) bool {
