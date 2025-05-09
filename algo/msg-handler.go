@@ -60,6 +60,34 @@ func (mp *MessagingPeer) handleConnection(conn net.Conn) {
 
 	mp.Messages = append(mp.Messages, msg)
 }
+
+func (mp *MessagingPeer) IterativeFindNode(targetId NodeID, knownPeers map[string]*MessagingPeer) {
+	// so this is for visited
+
+	visited := make(map[string]bool)
+
+	shortList := mp.RoutingTable.FindClosestContacts(targetId, contactSize)
+	closest := shortList
+
+	for {
+		newShortList := []Contacts{}
+
+		for _, contact := range shortList {
+			idStr := contact.Id.String()
+			if visited[idStr] {
+				continue
+			}
+
+			visited[idStr] = true
+			peer := knownPeers[idStr]
+			if peer == nil {
+				continue
+			}
+		}
+	}
+
+}
+
 func (mp *MessagingPeer) SendMessage(content string, peerId NodeID) (string, error) {
 	if mp.ID == peerId {
 		return "", fmt.Errorf("same peer can't send message to itself")
@@ -70,6 +98,8 @@ func (mp *MessagingPeer) SendMessage(content string, peerId NodeID) (string, err
 	peerAddress := mp.RoutingTable.buckets[index].Find(peerId)
 
 	if peerAddress == "" {
+		// ~ so now that means the peer is not found so we have to apply the routing logic here
+
 		return "", fmt.Errorf("peer not found in routing table")
 	}
 

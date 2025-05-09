@@ -98,6 +98,25 @@ func GetMSBIndex(distance *big.Int) int {
 	return distance.BitLen() - 1
 }
 
+func (rt *RoutingTable) FindClosestContacts(targetID NodeID, k int) []Contacts {
+	// ~ so how should I write the closest contacts functionality
+	allContacts := []Contacts{}
+	for _, bucket := range rt.buckets {
+		allContacts = append(allContacts, bucket.contacts...)
+	}
+
+	// ~ then may be I have to sort them out by the closest contacts
+	sort.Slice(allContacts, func(i, j int) bool {
+		d1 := targetID.XOR(allContacts[i].Id)
+		d2 := targetID.XOR(allContacts[j].Id)
+		return d1.Cmp(d2) == -1
+	})
+
+	if len(allContacts) < k {
+		return allContacts
+	}
+	return allContacts[:k]
+}
 func (rt *RoutingTable) Add(contact Contacts) {
 	distance := rt.selfId.XOR(contact.Id)
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/HadeedTariq/p-to-p-msg-system-kademlia/algo"
@@ -24,6 +25,10 @@ func main() {
 	// Peer D
 	peerD := algo.NewMessagingPeer(8003, "localhost")
 	go peerD.StartServer()
+
+	// Peer E
+	peerE := algo.NewMessagingPeer(8004, "localhost")
+	go peerE.StartServer()
 	time.Sleep(1 * time.Second)
 
 	peerB.RoutingTable.Add(algo.Contacts{
@@ -38,8 +43,16 @@ func main() {
 		Id:      peerD.ID,
 		Address: peerD.Address,
 	})
+	peerD.RoutingTable.Add(algo.Contacts{
+		Id:      peerE.ID,
+		Address: peerE.Address,
+	})
 
-	peerB.SendMessage("Hello from B to A", peerA.ID)
+	msg, err := peerB.SendMessage("Hello from B to E", peerE.ID)
+	if err != nil {
+		fmt.Println(err)
+	}
+	fmt.Println(msg)
 
 	select {}
 }
