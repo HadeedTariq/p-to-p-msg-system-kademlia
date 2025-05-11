@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"sort"
 )
 
 // ~ let say this is for storing messages in memory
@@ -61,7 +62,11 @@ func (mp *MessagingPeer) handleConnection(conn net.Conn) {
 	mp.Messages = append(mp.Messages, msg)
 }
 
-func (mp *MessagingPeer) IterativeFindNode(targetId NodeID, knownPeers map[string]*MessagingPeer) {
+func (mp *MessagingPeer) FindNode(targetID NodeID) []Contacts {
+	return mp.RoutingTable.FindClosestContacts(targetID, contactSize)
+}
+
+func (mp *MessagingPeer) IterativeFindNode(targetId NodeID, knownPeers map[string]*MessagingPeer) []Contacts {
 	// so this is for visited
 
 	visited := make(map[string]bool)
@@ -83,12 +88,37 @@ func (mp *MessagingPeer) IterativeFindNode(targetId NodeID, knownPeers map[strin
 			if peer == nil {
 				continue
 			}
+			fmt.Print(peer)
+			closerContacts := peer.FindNode(targetId)
+
+			for _, c := range closerContacts {
+				if !visited[c.Id.String()] {
+					newShortList = append(newShortList, c)
+				}
+			}
 		}
+		all := append(closest, newShortList...)
+		sort.Slice(all, func(i, j int) bool {
+			return targetId.XOR(all[i].Id).Cmp(targetId.XOR(all[j].Id)) < 0
+		})
+
+		if len(all) > contactSize {
+			all = all[:contactSize]
+		}
+
+		if EqualContacts(closest, all) {
+			break
+		}
+
+		closest = all
+		shortList = newShortList
 	}
+
+	return closest
 
 }
 
-func (mp *MessagingPeer) SendMessage(content string, peerId NodeID) (string, error) {
+func (mp *MessagingPeer) SendMessage(content string, peerId NodeID, network map[string]*MessagingPeer) (string, error) {
 	if mp.ID == peerId {
 		return "", fmt.Errorf("same peer can't send message to itself")
 	}
@@ -99,8 +129,18 @@ func (mp *MessagingPeer) SendMessage(content string, peerId NodeID) (string, err
 
 	if peerAddress == "" {
 		// ~ so now that means the peer is not found so we have to apply the routing logic here
+		closest := mp.IterativeFindNode(peerId, network)
 
-		return "", fmt.Errorf("peer not found in routing table")
+		for _, con := range closest {
+			if con.Id == peerId {
+				peerAddress = con.Address
+				break
+			}
+		}
+	}
+	fmt.Println(peerAddress)
+	if peerAddress == "" {
+		return "", fmt.Errorf("Could not find peer address")
 	}
 
 	conn, err := net.Dial("tcp", peerAddress)

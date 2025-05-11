@@ -39,7 +39,7 @@ func main() {
 		Id:      peerC.ID,
 		Address: peerC.Address,
 	})
-	peerB.RoutingTable.Add(algo.Contacts{
+	peerC.RoutingTable.Add(algo.Contacts{
 		Id:      peerD.ID,
 		Address: peerD.Address,
 	})
@@ -48,7 +48,16 @@ func main() {
 		Address: peerE.Address,
 	})
 
-	msg, err := peerB.SendMessage("Hello from B to E", peerE.ID)
+	// ~ in real world we don't have access to all the networks so we have to use the ping mechanism
+
+	network := map[string]*algo.MessagingPeer{}
+	network[peerA.ID.String()] = peerA
+	network[peerB.ID.String()] = peerB
+	network[peerC.ID.String()] = peerC
+	network[peerD.ID.String()] = peerD
+	network[peerE.ID.String()] = peerE
+
+	msg, err := peerB.SendMessage("Hello from B to E", peerE.ID, network)
 	if err != nil {
 		fmt.Println(err)
 	}
