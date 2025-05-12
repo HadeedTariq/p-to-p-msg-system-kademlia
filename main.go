@@ -8,9 +8,7 @@ import (
 )
 
 func main() {
-	// ~ so how the messaging system looks like the peers connect
 
-	// ~ so how does the peer connects
 	peerA := algo.NewMessagingPeer(8000, "localhost")
 	go peerA.StartServer()
 
@@ -49,7 +47,6 @@ func main() {
 	})
 
 	// ~ in real world we don't have access to all the networks so we have to use the ping mechanism
-
 	network := map[string]*algo.MessagingPeer{}
 	network[peerA.ID.String()] = peerA
 	network[peerB.ID.String()] = peerB

@@ -8,7 +8,6 @@ import (
 	"sort"
 )
 
-// ~ let say this is for storing messages in memory
 type Messages struct {
 	SenderId       NodeID
 	ReceiverId     NodeID
@@ -67,7 +66,6 @@ func (mp *MessagingPeer) FindNode(targetID NodeID) []Contacts {
 }
 
 func (mp *MessagingPeer) IterativeFindNode(targetId NodeID, knownPeers map[string]*MessagingPeer) []Contacts {
-	// so this is for visited
 
 	visited := make(map[string]bool)
 
@@ -88,7 +86,6 @@ func (mp *MessagingPeer) IterativeFindNode(targetId NodeID, knownPeers map[strin
 			if peer == nil {
 				continue
 			}
-			fmt.Print(peer)
 			closerContacts := peer.FindNode(targetId)
 
 			for _, c := range closerContacts {
@@ -128,7 +125,7 @@ func (mp *MessagingPeer) SendMessage(content string, peerId NodeID, network map[
 	peerAddress := mp.RoutingTable.buckets[index].Find(peerId)
 
 	if peerAddress == "" {
-		// ~ so now that means the peer is not found so we have to apply the routing logic here
+
 		closest := mp.IterativeFindNode(peerId, network)
 
 		for _, con := range closest {
@@ -138,7 +135,7 @@ func (mp *MessagingPeer) SendMessage(content string, peerId NodeID, network map[
 			}
 		}
 	}
-	fmt.Println(peerAddress)
+
 	if peerAddress == "" {
 		return "", fmt.Errorf("Could not find peer address")
 	}
